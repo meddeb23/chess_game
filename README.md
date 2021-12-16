@@ -1,2 +1,2 @@
 # chess_game
-chess game build with pygame 
+chess game built with pygame 
