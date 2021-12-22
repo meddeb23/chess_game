@@ -8,11 +8,10 @@ class GameGraphics():
         self.WIDTH = screenWidth
         # Dimiension of a Squar
         self.SQ_SIZE = min(screenHeight, screenWidth) // boardDimension
-        self.selectedSq = None
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption(caption)
 
-    def __drawSquars(self):
+    def __drawSquars(self, selectedSq):
         BLACK = (125, 125, 125)
         WHITE = (255, 255, 255)
         RED = (255, 0, 0)
@@ -22,7 +21,7 @@ class GameGraphics():
         for r in range(self.DIMENSION):
             for c in range(self.DIMENSION):
                 color = colors[(r+c) % 2]
-                if self.selectedSq == (r, c):
+                if selectedSq == (c, r):
                     color = RED
                 squar = pygame.Surface((self.SQ_SIZE, self.SQ_SIZE))
                 squar.fill(color)
@@ -59,7 +58,7 @@ class GameGraphics():
             return (y // self.SQ_SIZE, x // self.SQ_SIZE)
         return None
 
-    def render(self, gameState):
-        boardSurface = self.__drawSquars()
+    def render(self, gameState, selectedSq):
+        boardSurface = self.__drawSquars(selectedSq)
         boardSurface = self.__drawPieces(boardSurface, gameState)
         self.screen.blit(boardSurface, (0, 0))

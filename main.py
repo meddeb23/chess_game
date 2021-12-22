@@ -1,5 +1,7 @@
 import pygame
+
 from gameGraphic import GameGraphics
+
 pygame.init()
 
 # Define some colors
@@ -25,6 +27,32 @@ class GameState():
         self.selectedSq = None
         self.playerSelections = []  # track the user's squar selection history
         self.isWhiteTurn = True
+        self.logs = []
+
+    def selectPiece(self, coord):
+        player = ["b", "w"][self.isWhiteTurn]
+        selectedPiece = self.state[coord[0]][coord[1]]
+        print(
+            f"""----------------------
+    Player: {player}
+    Selected piece: {selectedPiece}
+    Coord ({coord[0]},{coord[1]})
+----------------------""")
+        if len(self.playerSelections) == 0:
+            if selectedPiece[0] == player:
+                self.selectedSq = coord
+                self.playerSelections.append(coord)
+        else:
+            if selectedPiece == "--":
+                self.state[coord[0]][coord[1]
+                                     ] = self.state[self.selectedSq[0]][self.selectedSq[1]]
+                self.state[self.selectedSq[0]][self.selectedSq[1]] = "--"
+                self.selectedSq = None
+                self.playerSelections.pop()
+                self.isWhiteTurn = not self.isWhiteTurn
+            elif selectedPiece == self.state[self.selectedSq[0]][self.selectedSq[1]]:
+                self.selectedSq = None
+                self.playerSelections.pop()
 
 
 def main():
@@ -40,12 +68,10 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 sqCoord = gameGraphic.getPieceIndex(pygame.mouse.get_pos())
                 if sqCoord != None:
-                    print(
-                        f"Selected piece: {gameState.state[sqCoord[0]][sqCoord[1]]}, coord ({sqCoord[0]},{sqCoord[1]})")
+                    gameState.selectPiece(sqCoord)
 
         gameGraphic.screen.fill(WHITE)
-        gameGraphic.render(gameState.state)
-        # board_surface = drawSquars(screen)
+        gameGraphic.render(gameState.state, gameState.selectedSq)
         pygame.display.flip()
         clock.tick(FPS)
 
