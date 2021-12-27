@@ -72,7 +72,7 @@ class GameState():
         if pieceName == "R":
             self.geRockMoves(move.startRow, move.startCol, possibleMoves)
         print(possibleMoves)
-        return (move.endRow, move.endCol) in possibleMoves
+        return move in possibleMoves
 
     """
     Get all possible moves for a pawn
@@ -81,17 +81,17 @@ class GameState():
     def getPawnMoves(self, r, c, moves):
         coef = -1 if self.isWhiteTurn else 1
         if self.state[r + coef*1][c] == "--":
-            moves.append((r + coef*1, c))
+            moves.append(Move((r, c), (r + coef*1, c)))
             if self.isWhiteTurn:
                 if r+coef*2 >= self.dimension // 2:
-                    moves.append((r+coef*2, c))
+                    moves.append(Move((r, c), (r+coef*2, c)))
             else:
                 if r+coef*2 < self.dimension // 2:
-                    moves.append((r+coef*2, c))
+                    moves.append(Move((r, c), (r+coef*2, c)))
         if self.state[r + coef*1][c+1] != "--":
-            moves.append((r+coef*1, c+1))
+            moves.append(Move((r, c), (r + coef*1, c+1)))
         if self.state[r + coef*1][c-1] != "--":
-            moves.append((r+coef*1, c-1))
+            moves.append(Move((r, c), (r + coef*1, c-1)))
     """
     Get all possible moves for a Rock
     """
@@ -100,30 +100,29 @@ class GameState():
         player = "w" if self.isWhiteTurn else "b"
         i = 1
         while (r+i) in range(0, self.dimension) and self.state[r + i][c] == "--":
-            moves.append((r + i, c))
+            moves.append(Move((r, c), (r + i, c)))
             i += 1
-
         if (r+i) in range(0, self.dimension) and self.state[r + i][c][0] != player:
-            moves.append((r + i, c))
+            moves.append(Move((r, c), (r + i, c)))
         i = 1
         while (r-i) in range(0, self.dimension) and self.state[r - i][c] == "--":
-            moves.append((r - i, c))
+            moves.append(Move((r, c), (r - i, c)))
             i += 1
         if (r-i) in range(0, self.dimension) and self.state[r - i][c][0] != player:
-            moves.append((r - i, c))
+            moves.append(Move((r, c), (r - i, c)))
         i = 1
         while (c+i) in range(0, self.dimension) and self.state[r][c + i] == "--":
-            moves.append((r, c + i))
+            moves.append(Move((r, c), (r, c + i)))
             i += 1
 
         if (c+i) in range(0, self.dimension) and self.state[r][c + i][0] != player:
-            moves.append((r, c + i))
+            moves.append(Move((r, c), (r, c + i)))
         i = 1
         while (c-i) in range(0, self.dimension) and self.state[r][c - i] == "--":
-            moves.append((r, c - i))
+            moves.append(Move((r, c), (r, c - i)))
             i += 1
         if (c-i) in range(0, self.dimension) and self.state[r][c - i][0] != player:
-            moves.append((r, c - i))
+            moves.append(Move((r, c), (r, c - i)))
 
 
 class Move:
@@ -140,6 +139,9 @@ class Move:
         self.startCol = start[1]
         self.endRow = end[0]
         self.endCol = end[1]
+
+    def __eq__(self, __o: object) -> bool:
+        return __o.startRow == self.startRow and __o.startCol == self.startCol and __o.endRow == self.endRow and __o.endCol == self.endCol
 
     def __str__(self) -> str:
         return f"move {self.getRankFile(self.startCol,self.startRow)} to {self.getRankFile(self.endCol,self.endRow)} "
