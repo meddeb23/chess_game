@@ -1,5 +1,15 @@
 class GameState():
     def __init__(self) -> None:
+        # self.state = [
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "wN", "--", "--", "--", "--"],
+        #     ["--", "bp", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["wR", "bp", "--", "--", "--", "--", "--", "--"],
+        #     ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
+        #     ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
+        # ]
         self.state = [
             ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
@@ -67,11 +77,13 @@ class GameState():
     def isValidMove(self, move):
         possibleMoves = []
         pieceName = self.state[move.startRow][move.startCol][1]
-        if pieceName == "p":
-            self.getPawnMoves(move.startRow, move.startCol, possibleMoves)
-        if pieceName == "R":
-            self.geRockMoves(move.startRow, move.startCol, possibleMoves)
-        print(possibleMoves)
+        getPieceMove = {
+            "p": self.getPawnMoves,
+            "R": self.getRockMoves,
+            "N": self.getKnightMoves,
+            "B": self.getPawnMoves,
+        }
+        getPieceMove[pieceName](move.startRow, move.startCol, possibleMoves)
         return move in possibleMoves
 
     """
@@ -92,11 +104,25 @@ class GameState():
             moves.append(Move((r, c), (r + coef*1, c+1)))
         if self.state[r + coef*1][c-1] != "--":
             moves.append(Move((r, c), (r + coef*1, c-1)))
+
+    """
+    Get all possible moves for a knight
+    """
+
+    def getKnightMoves(self, r, c, moves):
+        player = "w" if self.isWhiteTurn else "b"
+        directions = [(2, 1), (2, -1), (-2, 1), (-2, -1),
+                      (1, 2), (1, -2), (-1, 2), (-1, -2)]
+        for i, j in directions:
+            if r+i in range(self.dimension) and c+j in range(self.dimension):
+                if self.state[r + i][c+j][0] != player:
+                    moves.append(Move((r, c), (r + i, c+j)))
+
     """
     Get all possible moves for a Rock
     """
 
-    def geRockMoves(self, r, c, moves):
+    def getRockMoves(self, r, c, moves):
         player = "w" if self.isWhiteTurn else "b"
         i = 1
         while (r+i) in range(0, self.dimension) and self.state[r + i][c] == "--":
