@@ -1,5 +1,6 @@
 class GameState():
     def __init__(self) -> None:
+
         self.state = [
             ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
@@ -10,6 +11,7 @@ class GameState():
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
         ]
+
         self.dimension = 8
         self.selectedSq = None
         self.playerSelections = []  # track the user's squar selection history
@@ -41,39 +43,38 @@ class GameState():
                 self.selectedSq = None
                 self.playerSelections.pop()
             else:
-                self.makeMove(Move(self.selectedSq, coord))
-
+                move = Move(self.selectedSq, coord)
+                if self.isValidMove(move):
+                    self.makeMove(move)
+                    self.selectedSq = None
+                    self.playerSelections.pop()
+                else:
+                    print("Not a valid move!")
     '''
     Make a move
     '''
 
-    def switchPieces(self, move):
+    # def switchPieces(self, move):
+
+    #     return movedPiece
+
+    def makeMove(self, move):
+        # movedPiece = self.switchPieces(move)
         self.state[move.endRow][move.endCol] = self.state[move.startRow][move.startCol]
         movedPiece = self.state[move.startRow][move.startCol]
         self.state[move.startRow][move.startCol] = "--"
         self.logs.append(move)
+        player = ["b", "w"][self.isWhiteTurn]
+        print(f"player: {player}, {movedPiece} {move}")
+        self.isWhiteTurn = not self.isWhiteTurn
 
-        return movedPiece
-
-    def makeMove(self, move):
-        if self.isValidMove(move):
-            movedPiece = self.switchPieces(move)
-            player = ["b", "w"][self.isWhiteTurn]
-            print(f"player: {player}, {movedPiece} {move}")
-            self.selectedSq = None
-            self.playerSelections.pop()
-            print(self.isWhiteTurn)
-            self.isWhiteTurn = not self.isWhiteTurn
-            # update the king's location
-            if movedPiece == "wk":
-                self.whiteKingLocation = (move.endRow, move.endCol)
-                print("YO White king says hi")
-            elif movedPiece == "bk":
-                print("YO black king says hi")
-
-                self.blackKingLocation = (move.endRow, move.endCol)
-        else:
-            print("Not a valid move!")
+        # update the king's location
+        if movedPiece == "wk":
+            self.whiteKingLocation = (move.endRow, move.endCol)
+            print("YO White king says hi")
+        elif movedPiece == "bk":
+            print("YO black king says hi")
+            self.blackKingLocation = (move.endRow, move.endCol)
 
     '''
     undo the last move
@@ -101,13 +102,13 @@ class GameState():
         pieceName = self.state[move.startRow][move.startCol][1]
         self.getPieceMove[pieceName](
             move.startRow, move.startCol, possibleMoves)
+        # return move in possibleMoves
         if move in possibleMoves:
-            self.switchPieces(move)
+            self.makeMove(move)
             status = self.inCheck()
             if status:
                 print("check!")
             self.undoMove()
-            self.isWhiteTurn = not self.isWhiteTurn
             return not status
 
         return False
@@ -126,10 +127,9 @@ class GameState():
             else:
                 if r + coef * 2 < self.dimension // 2:
                     moves.append(Move((r, c), (r + coef * 2, c)))
-
-        if self.state[r + coef * 1][c + 1 if c < 7 else c] != "--":
+        if c < 7 and self.state[r + coef * 1][c + 1] != "--":
             moves.append(Move((r, c), (r + coef * 1, c + 1)))
-        if self.state[r + coef * 1][c - 1] != "--":
+        if c > 0 and self.state[r + coef * 1][c - 1] != "--":
             moves.append(Move((r, c), (r + coef * 1, c - 1)))
 
     """
@@ -156,6 +156,7 @@ class GameState():
             moves.append(Move((r, c), (r + i, c)))
             i += 1
         if (r + i) in range(0, self.dimension) and self.state[r + i][c][0] != player:
+            print("oops")
             moves.append(Move((r, c), (r + i, c)))
         i = 1
         while (r - i) in range(0, self.dimension) and self.state[r - i][c] == "--":
@@ -243,13 +244,15 @@ class GameState():
                     break
 
     def getAllPossibleMoves(self, _turn):
-        moves = []
+        moves = {}
         for r in range(len(self.state)):
             for c in range(len(self.state[r])):
                 turn = self.state[r][c][0]
                 if (turn == 'w' and _turn) or (turn == 'b' and not _turn):
                     piece = self.state[r][c][1]
-                    self.getPieceMove[piece](r, c, moves)
+                    if f'{turn}{piece}' not in moves.keys():
+                        moves[f'{turn}{piece}'] = []
+                    self.getPieceMove[piece](r, c, moves[f'{turn}{piece}'])
         return moves
 
     # def getValidMoves(self):
@@ -271,17 +274,22 @@ class GameState():
     def inCheck(self):
         # check if the king's square is under attack
         if self.isWhiteTurn:
-            return self.squareUnderAttack(self.whiteKingLocation, not self.isWhiteTurn)
+            return self.squareUnderAttack(self.blackKingLocation, not self.isWhiteTurn)
         else:
-            return self.squareUnderAttack(self.blackKingLocation, self.isWhiteTurn)
+            return self.squareUnderAttack(self.whiteKingLocation, self.isWhiteTurn)
 
     def squareUnderAttack(self, location, _turn):
         # check if it's the other player's turn to make a move, can he capture the king ?
-        oppMoves = self.getAllPossibleMoves(_turn)
+        oppMoves = self.getAllPossibleMoves(self.isWhiteTurn)
         # check if any of the those moves are attacking the king
-        for move in oppMoves:
-            if (move.endRow, move.endCol) == location:
-                return True
+        for p, Pmove in oppMoves.items():
+            print(p)
+            for move in Pmove:
+                print(move,
+                      (move.startRow, move.startCol),
+                      (move.endRow, move.endCol), location)
+                if (move.endRow, move.endCol) == location:
+                    return True
         # we have to return the turns so this function doesn't mess who can play now
         return False
 
