@@ -231,12 +231,12 @@ class GameState():
 
                     break
 
-    def getAllPossibleMoves(self):
+    def getAllPossibleMoves(self,_turn):
         moves = []
         for r in range(len(self.state)):
             for c in range(len(self.state[r])):
                 turn = self.state[r][c][0]
-                if (turn == 'w' and self.isWhiteTurn) or (turn == 'b' and not self.isWhiteTurn):
+                if (turn == 'w' and self._turn) or (turn == 'b' and not self._turn):
                     piece = self.state[r][c][1]
                     self.getPieceMove[piece](r, c, moves)
         return moves
@@ -260,14 +260,16 @@ class GameState():
     def inCheck(self):
         # check if the king's square is under attack
         if self.isWhiteTurn:
-            return self.squareUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[0])
+            print("check!")
+            return self.squareUnderAttack(self.whiteKingLocation)
         else:
-            return self.squareUnderAttack(self.blackKingLocation[0], self.blackKingLocation[0])
+            return self.squareUnderAttack(self.blackKingLocation)
 
-    def squareUnderAttack(self, r, c):
+    def squareUnderAttack(self, location,_turn):
+        r, c = location
         #check if it's the other player's turn to make a move, can he capture the king ?
         self.isWhiteTurn = not self.isWhiteTurn
-        oppMoves = self.getAllPossibleMoves()
+        oppMoves = self.getAllPossibleMoves(_turn)
         #check if any of the those moves are attacking the king
         for move in oppMoves:
             if move.endRow == r and move.endCol == c:
