@@ -1,3 +1,7 @@
+import imp
+from Move import Move
+
+
 class GameState():
     def __init__(self) -> None:
 
@@ -106,8 +110,6 @@ class GameState():
         if move in possibleMoves:
             self.makeMove(move)
             status = self.inCheck()
-            if status:
-                print("check!")
             self.undoMove()
             return not status
 
@@ -255,22 +257,6 @@ class GameState():
                     self.getPieceMove[piece](r, c, moves[f'{turn}{piece}'])
         return moves
 
-    # def getValidMoves(self):
-    #     # generate all possible moves
-    #     moves = self.getAllPossibleMoves()
-    #     # for each move, make the move
-    #     for i in range(len(moves) - 1, -1, -1):  # when removing from a list iterate from back to front
-    #         self.makeMove(moves[i])
-    #     # generate all opponenet moves
-    #     # for each of the moves check if they attack the king
-    #         self.isWhiteTurn = not self.isWhiteTurn # makemove switches who's turn it is
-    #         if self.inCheck():
-    #             moves.remove(moves[i]) # => no a valid move
-    #         self.isWhiteTurn = not self.isWhiteTurn # makemove switches who's turn it is
-    #         self.undoMove()
-
-    #     return moves
-
     def inCheck(self):
         # check if the king's square is under attack
         if self.isWhiteTurn:
@@ -292,27 +278,3 @@ class GameState():
                     return True
         # we have to return the turns so this function doesn't mess who can play now
         return False
-
-
-class Move:
-    ranksToRow = {"1": 7, "2": 6, "3": 5,
-                  "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
-    rowsToRanks = {k: v for v, k in ranksToRow.items()}
-    filesToCols = {"h": 7, "g": 6, "f": 5,
-                   "e": 4, "d": 3, "c": 2, "b": 1, "a": 0}
-    colsToFiles = {k: v for v, k in filesToCols.items()}
-
-    def __init__(self, start, end) -> None:
-        self.startRow = start[0]
-        self.startCol = start[1]
-        self.endRow = end[0]
-        self.endCol = end[1]
-
-    def __eq__(self, __o: object) -> bool:
-        return __o.startRow == self.startRow and __o.startCol == self.startCol and __o.endRow == self.endRow and __o.endCol == self.endCol
-
-    def __str__(self) -> str:
-        return f"move {self.getRankFile(self.startCol, self.startRow)} to {self.getRankFile(self.endCol, self.endRow)} "
-
-    def getRankFile(self, c, r):
-        return self.colsToFiles[c] + self.rowsToRanks[r]
