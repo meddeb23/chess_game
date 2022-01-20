@@ -2,13 +2,13 @@ class GameState():
     def __init__(self) -> None:
         # self.state = [
         #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "bp", "--", "bp", "--", "--",  "--", "--"],
+        #     ["--", "--", "wp", "--", "wp", "--", "--", "--"],
+        #     ["--", "bp", "--", "wR", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "wp", "--", "--", "--"],
+        #     ["--", "--", "--", "bp", "--", "--", "--", "--"],
         #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "wN", "--", "--", "--", "--"],
-        #     ["--", "bp", "--", "--", "--", "--", "--", "--"],
         #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["wR", "bp", "--", "--", "--", "--", "--", "--"],
-        #     ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-        #     ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
         # ]
         self.state = [
             ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
@@ -16,7 +16,7 @@ class GameState():
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["wR", "bp", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
         ]
@@ -59,6 +59,7 @@ class GameState():
             self.isWhiteTurn = not self.isWhiteTurn
         else:
             print("Not a valid move!")
+
     '''
     undo the last move
     '''
@@ -81,7 +82,7 @@ class GameState():
             "p": self.getPawnMoves,
             "R": self.getRockMoves,
             "N": self.getKnightMoves,
-            "B": self.getPawnMoves,
+            "B": self.getBishopMoves,
         }
         getPieceMove[pieceName](move.startRow, move.startCol, possibleMoves)
         return move in possibleMoves
@@ -124,31 +125,73 @@ class GameState():
 
     def getRockMoves(self, r, c, moves):
         player = "w" if self.isWhiteTurn else "b"
-        i = 1
-        while (r+i) in range(0, self.dimension) and self.state[r + i][c] == "--":
-            moves.append(Move((r, c), (r + i, c)))
-            i += 1
-        if (r+i) in range(0, self.dimension) and self.state[r + i][c][0] != player:
-            moves.append(Move((r, c), (r + i, c)))
-        i = 1
-        while (r-i) in range(0, self.dimension) and self.state[r - i][c] == "--":
-            moves.append(Move((r, c), (r - i, c)))
-            i += 1
-        if (r-i) in range(0, self.dimension) and self.state[r - i][c][0] != player:
-            moves.append(Move((r, c), (r - i, c)))
-        i = 1
-        while (c+i) in range(0, self.dimension) and self.state[r][c + i] == "--":
-            moves.append(Move((r, c), (r, c + i)))
-            i += 1
 
-        if (c+i) in range(0, self.dimension) and self.state[r][c + i][0] != player:
-            moves.append(Move((r, c), (r, c + i)))
+        ''' foarward'''
         i = 1
-        while (c-i) in range(0, self.dimension) and self.state[r][c - i] == "--":
+        while (r+i) < self.dimension and self.state[r + i][c] == "--":
+            moves.append(Move((r, c), (r + i, c)))
+            i += 1
+        if (r+i) < self.dimension and self.state[r + i][c][0] != player:
+            moves.append(Move((r, c), (r + i, c)))
+        ''' backward'''
+        i = 1
+        while (r-i) >= 0 and self.state[r - i][c] == "--":
+            moves.append(Move((r, c), (r - i, c)))
+            i += 1
+        if (r-i) >= 0 and self.state[r - i][c][0] != player:
+            moves.append(Move((r, c), (r - i, c)))
+        ''' right'''
+        i = 1
+        while (c+i) < self.dimension and self.state[r][c + i] == "--":
+            moves.append(Move((r, c), (r, c + i)))
+            i += 1
+        if (c+i) < self.dimension and self.state[r][c + i][0] != player:
+            moves.append(Move((r, c), (r, c + i)))
+        ''' left'''
+        i = 1
+        while (c-i) >= 0 and self.state[r][c - i] == "--":
             moves.append(Move((r, c), (r, c - i)))
             i += 1
-        if (c-i) in range(0, self.dimension) and self.state[r][c - i][0] != player:
+        if (c-i) >= 0 and self.state[r][c - i][0] != player:
             moves.append(Move((r, c), (r, c - i)))
+
+    """
+    Get all possible moves for a Rock
+    """
+
+    def getBishopMoves(self, r, c, moves):
+        player = "w" if self.isWhiteTurn else "b"
+
+        """ \ """
+        i = 1
+        while r+i < self.dimension and c+i < self.dimension and self.state[r + i][c + i] == "--":
+            moves.append(Move((r, c), (r + i, c + i)))
+            i += 1
+        if r+i < self.dimension and c+i < self.dimension and self.state[r + i][c + i][0] != player:
+            moves.append(Move((r, c), (r + i, c + i)))
+
+        while (r-j >= 0 and c-j >= 0) and self.state[r - j][c - j] == "--":
+            moves.append(Move((r, c), (r - j, c - j)))
+            j += 1
+
+        if (r+i < self.dimension and c+i < self.dimension) or (r-j >= 0 and c-j >= 0):
+            if self.state[r - j][c - j][0] != player:
+                moves.append(Move((r, c), (r - j, c - j)))
+        """ / """
+        i = j = 1
+        while ((r+i < self.dimension and c-i >= 0) or (r-j >= 0 and c+j < self.dimension)) and (self.state[r + i][c - i] == "--" or self.state[r - j][c + j] == "--"):
+            if self.state[r + 1][c - i] == "--":
+                moves.append(Move((r, c), (r + i, c - i)))
+                i += 1
+            if self.state[r - j][c + j] == "--":
+                moves.append(Move((r, c), (r - j, c + j)))
+                j += 1
+
+        if (r+i < self.dimension and c-i >= 0) or (r-j >= 0 and c+j < self.dimension):
+            if self.state[r + i][c - i][0] != player:
+                moves.append(Move((r, c), (r + i, c - i)))
+            if self.state[r - j][c + j][0] != player:
+                moves.append(Move((r, c), (r - j, c + j)))
 
 
 class Move:
