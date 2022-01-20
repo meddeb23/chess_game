@@ -155,12 +155,123 @@ class GameState():
         if (c-i) >= 0 and self.state[r][c - i][0] != player:
             moves.append(Move((r, c), (r, c - i)))
 
-    """
-    Get all possible moves for a Rock
-    """
-
     def getBishopMoves(self, r, c, moves):
-        player = "w" if self.isWhiteTurn else "b"
+        enemy_color = "b" if self.isWhiteTurn else "w"
+        directions = [[-1, -1], [-1, 1], [1, 1], [1, -1]]
+        for d in directions:
+            for i in range(1, 8):
+                end_row = r + i * d[0]
+                end_col = c + i * d[1]
+                if end_row in range(8) and end_col in range(8):
+                    end_piece = self.state[end_row][end_col]
+                    if end_piece == "--":  # empty space is valid
+                        moves.append(Move((r, c), (end_row, end_col)))
+                    elif end_piece[0] == enemy_color:
+                        moves.append(Move((r, c), (end_row, end_col)))
+                        break
+                    else:  # friendly piece
+                        # add feature to select friendly pieces
+                        break
+                else:  # off board
+                    break
+
+    def getQueenMoves(self, r, c, moves):
+        enemy_color = "b" if self.isWhiteTurn else "w"
+        directions = [[0, -1], [-1, 0], [0, 1],
+                      [1, 0], [-1, -1], [-1, 1], [1, 1], [1, -1]]
+        for d in directions:
+            for i in range(1, 8):
+                end_row = r + i * d[0]
+                end_col = c + i * d[1]
+                if end_row in range(8) and end_col in range(8):
+                    end_piece = self.state[end_row][end_col]
+                    if end_piece == "--":  # empty space is valid
+                        moves.append(Move((r, c), (end_row, end_col)))
+                        print(end_row, end_col)
+                    elif end_piece[0] == enemy_color:
+                        moves.append(Move((r, c), (end_row, end_col)))
+                        print(end_row, end_col)
+
+                        break
+                    else:  # friendly piece
+                        # add feature to select friendly pieces
+                        break
+                else:  # off board
+                    break
+
+    def getKingMoves(self, r, c, moves):
+        enemy_color = "b" if self.isWhiteTurn else "w"
+        directions = [[0, -1], [-1, 0], [0, 1],
+                      [1, 0], [-1, -1], [-1, 1], [1, 1], [1, -1]]
+        for d in directions:
+            for i in range(1, 2):
+                end_row = r + i * d[0]
+                end_col = c + i * d[1]
+                if end_row in range(8) and end_col in range(8):
+                    end_piece = self.state[end_row][end_col]
+                    if end_piece == "--":  # empty space is valid
+                        moves.append(Move((r, c), (end_row, end_col)))
+                        print(end_row, end_col)
+                    elif end_piece[0] == enemy_color:
+                        moves.append(Move((r, c), (end_row, end_col)))
+                        print(end_row, end_col)
+
+                        break
+                    else:  # friendly piece
+                        # add feature to select friendly pieces
+                        break
+                else:  # off board
+
+                    break
+
+    def getAllPossibleMoves(self, _turn):
+        moves = []
+        for r in range(len(self.state)):
+            for c in range(len(self.state[r])):
+                turn = self.state[r][c][0]
+                if (turn == 'w' and self._turn) or (turn == 'b' and not self._turn):
+                    piece = self.state[r][c][1]
+                    self.getPieceMove[piece](r, c, moves)
+        return moves
+
+    def getValidMoves(self):
+        # generate all possible moves
+        moves = self.getAllPossibleMoves()
+        # for each move, make the move
+        # when removing from a list iterate from back to front
+        for i in range(len(moves) - 1, -1, -1):
+            self.makeMove(moves[i])
+        # generate all opponenet moves
+        # for each of the moves check if they attack the king
+            self.isWhiteTurn = not self.isWhiteTurn  # makemove switches who's turn it is
+            if self.inCheck():
+                moves.remove(moves[i])  # => no a valid move
+            self.isWhiteTurn = not self.isWhiteTurn  # makemove switches who's turn it is
+            self.undoMove()
+
+        return moves
+
+    def inCheck(self):
+        # check if the king's square is under attack
+        if self.isWhiteTurn:
+            print("check!")
+            return self.squareUnderAttack(self.whiteKingLocation)
+        else:
+            return self.squareUnderAttack(self.blackKingLocation)
+
+    def squareUnderAttack(self, location, _turn):
+        r, c = location
+        # check if it's the other player's turn to make a move, can he capture the king ?
+        self.isWhiteTurn = not self.isWhiteTurn
+        oppMoves = self.getAllPossibleMoves(_turn)
+        # check if any of the those moves are attacking the king
+        for move in oppMoves:
+            if move.endRow == r and move.endCol == c:
+                self.isWhiteTurn = not self.isWhiteTurn
+                return True
+        # we have to return the turns so this function doesn't mess who can play now
+        self.isWhiteTurn = not self.isWhiteTurn
+        return False
 
         """ \ """
         i = j = 1
@@ -195,7 +306,6 @@ class GameState():
 
 
 class Move:
-
     ranksToRow = {"1": 7, "2": 6, "3": 5,
                   "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
     rowsToRanks = {k: v for v, k in ranksToRow.items()}
@@ -213,17 +323,7 @@ class Move:
         return __o.startRow == self.startRow and __o.startCol == self.startCol and __o.endRow == self.endRow and __o.endCol == self.endCol
 
     def __str__(self) -> str:
-        return f"move {self.getRankFile(self.startCol,self.startRow)} to {self.getRankFile(self.endCol,self.endRow)} "
+        return f"move {self.getRankFile(self.startCol, self.startRow)} to {self.getRankFile(self.endCol, self.endRow)} "
 
     def getRankFile(self, c, r):
-        return f"move {self.getRankFile(self.startCol,self.startRow)} to {self.getRankFile(self.endCol,self.endRow)} "
-
-    def getRankFile(self, c, r):
-        return self.colsToFiles[c]+self.rowsToRanks[r]
-
-
-str:
-        return f"move {self.getRankFile(self.startCol,self.startRow)} to {self.getRankFile(self.endCol,self.endRow)} "
-
-    def getRankFile(self, c, r):
-        return self.colsToFiles[c]+self.rowsToRanks[r]
+        return self.colsToFiles[c] + self.rowsToRanks[r]
