@@ -18,7 +18,10 @@ class Move:
         return __o.startRow == self.startRow and __o.startCol == self.startCol and __o.endRow == self.endRow and __o.endCol == self.endCol
 
     def __str__(self) -> str:
-        return f"{self.movedPiece} move {self.getRankFile(self.startCol, self.startRow)} to {self.getRankFile(self.endCol, self.endRow)} "
+        capture = ""
+        if self.capturedPiece:
+            capture += "captured " + self.capturedPiece
+        return f"{self.movedPiece} move {self.getRankFile(self.startCol, self.startRow)} to {self.getRankFile(self.endCol, self.endRow)} {capture}"
 
     def getRankFile(self, c, r):
         return self.colsToFiles[c] + self.rowsToRanks[r]

@@ -10,6 +10,7 @@ class GameGraphics():
         self.SQ_SIZE = min(screenHeight, screenWidth) // boardDimension
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption(caption)
+        self.layers = []
 
     def __drawSquars(self, selectedSq):
         BLACK = (125, 125, 125)
@@ -62,9 +63,11 @@ class GameGraphics():
         boardSurface = self.__drawSquars(selectedSq)
         boardSurface = self.__drawPieces(boardSurface, gameState)
         self.screen.blit(boardSurface, (0, 0))
+        for layer, pos in self.layers:
+            self.screen.blit(layer, pos)
 
     def promotionListRender(self):
-        print("testing passing function")
         temp_surface = pygame.Surface((100, 100))
         temp_surface.fill((255, 0, 0))
+        # self.layers.append((temp_surface, (self.WIDTH - 100, 0)))
         self.screen.blit(temp_surface, (self.WIDTH - 100, 0))

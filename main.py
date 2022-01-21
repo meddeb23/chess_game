@@ -29,8 +29,14 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_z:
                     gameState.undoMove()
+
         gameGraphic.screen.fill(WHITE)
+        # pawnSq = gameState.checkPawnPromotion()
+        # if pawnSq:
+        #     print("Pawn promotion graphic handler")
+        #     gameGraphic.promotionListRender()
         gameGraphic.render(gameState.state, gameState.selectedSq)
+
         pygame.display.flip()
         clock.tick(FPS)
 
