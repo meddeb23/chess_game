@@ -46,7 +46,7 @@ class GameState():
             "k": self.getKingMoves
         }
 
-    def selectPiece(self, coord, action):
+    def selectPiece(self, coord):
         player = ["b", "w"][self.isWhiteTurn]
         selectedPiece = self.state[coord[0]][coord[1]]
         # print(
