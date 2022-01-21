@@ -1,19 +1,31 @@
 import imp
+from operator import index
+from turtle import undo
 from Move import Move
 
 
 class GameState():
     def __init__(self) -> None:
 
+        # self.state = [
+        #     ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
+        #     ["bp", "bp", "bp", "bp", "bp", "wp", "bp", "bp"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
+        #     ["wp", "wp", "wp", "wp", "wp", "bp", "wp", "wp"],
+        #     ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
+        # ]
         self.state = [
             ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
-            ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-            ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
+            ["bp", "bp", "--", "--", "bp", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "bp", "--", "bp"],
+            ["--", "wN", "--", "bp", "--", "--", "bp", "--"],
+            ["wQ", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "wp", "wp", "--", "--", "--", "--"],
+            ["wp", "wp", "--", "--", "wp", "wp", "wp", "wp"],
+            ["wR", "--", "wB", "wQ", "wk", "wB", "wN", "wR"],
         ]
 
         self.dimension = 8
@@ -47,38 +59,70 @@ class GameState():
                 self.selectedSq = None
                 self.playerSelections.pop()
             else:
-                move = Move(self.selectedSq, coord)
+                move = Move(self.selectedSq, coord,
+                            self.state[coord[0]][coord[1]])
                 if self.isValidMove(move):
                     self.makeMove(move)
-                    self.selectedSq = None
-                    self.playerSelections.pop()
+
                 else:
                     print("Not a valid move!")
+
+    def checkPawnPromotion(self, move, piece):
+        promotions = ["R", "N", "B", "Q"]
+        if (self.isWhiteTurn and piece[0] == "w" and move.endRow == 0) or (not self.isWhiteTurn and piece[0] == "b" and move.endRow == 7):
+            index = int(input(f"Enter the index of the piece {promotions}"))
+            newPicee = f"{piece[0]}{promotions[index]}"
+            print(f"{piece} promoted to {newPicee}")
+            return newPicee
+        return piece
+
+    """
+    Switch Pieces
+    """
+
+    def switchPieces(self, move):
+        movedPiece = self.state[move.startRow][move.startCol]
+        self.state[move.endRow][move.endCol] = movedPiece
+        self.state[move.startRow][move.startCol] = "--"
+        # update the king's location
+        if movedPiece == "wk":
+            self.whiteKingLocation = (move.endRow, move.endCol)
+        elif movedPiece == "bk":
+            self.blackKingLocation = (move.endRow, move.endCol)
+        return movedPiece
+
+    """
+    Unswitch Pieces
+    """
+
+    def unswitchPieces(self, move):
+        movedPiece = self.state[move.endRow][move.endCol]
+        self.state[move.startRow][move.startCol] = movedPiece
+        self.state[move.endRow][move.endCol] = move.capture
+        if movedPiece == "wk":
+            self.whiteKingLocation = (move.startRow, move.startCol)
+        elif movedPiece == "bk":
+            self.blackKingLocation = (move.startRow, move.startCol)
+        return movedPiece
+
     '''
     Make a move
     '''
 
-    # def switchPieces(self, move):
-
-    #     return movedPiece
-
     def makeMove(self, move):
-        # movedPiece = self.switchPieces(move)
-        self.state[move.endRow][move.endCol] = self.state[move.startRow][move.startCol]
-        movedPiece = self.state[move.startRow][move.startCol]
-        self.state[move.startRow][move.startCol] = "--"
+        movedPiece = self.switchPieces(move)
         self.logs.append(move)
-        player = ["b", "w"][self.isWhiteTurn]
-        print(f"player: {player}, {movedPiece} {move}")
-        self.isWhiteTurn = not self.isWhiteTurn
+        if movedPiece[1] == "p":
+            newPiece = self.checkPawnPromotion(move, movedPiece)
+            self.state[move.endRow][move.endCol] = newPiece
+            self.logs.append(Move((move.endRow, move.endCol),
+                             (move.endRow, move.endCol), movedPiece))
+        self.selectedSq = None
+        self.playerSelections.pop()
+        print(
+            f"player: {self.getPlayerColor(self.isWhiteTurn)}, {movedPiece} {move}")
 
-        # update the king's location
-        if movedPiece == "wk":
-            self.whiteKingLocation = (move.endRow, move.endCol)
-            print("YO White king says hi")
-        elif movedPiece == "bk":
-            print("YO black king says hi")
-            self.blackKingLocation = (move.endRow, move.endCol)
+        self.isWhiteTurn = not self.isWhiteTurn
 
     '''
     undo the last move
@@ -87,15 +131,18 @@ class GameState():
     def undoMove(self):
         if len(self.logs) != 0:
             move = self.logs.pop()
-            self.state[move.startRow][move.startCol] = self.state[move.endRow][move.endCol]
-            self.state[move.endRow][move.endCol] = "--"
+            self.unswitchPieces(move)
+            if move.endCol == move.startCol and move.endRow == move.startRow:
+                move = self.logs.pop()
+                self.unswitchPieces(move)
             self.isWhiteTurn = not self.isWhiteTurn
-            # update the king's location
-            movedPiece = self.state[move.startRow][move.startCol]
-            if movedPiece == "wk":
-                self.whiteKingLocation = (move.startRow, move.startCol)
-            elif movedPiece == "bk":
-                self.blackKingLocation = (move.startRow, move.startCol)
+
+    def getKingPosition(self, board, playerColor):
+        for r in range(len(board)):
+            for c in range(len(board[r])):
+                if f"{playerColor}K" == board[r][c]:
+                    print((r, c))
+                    return (r, c)
 
     """
     check for valid moves
@@ -105,22 +152,64 @@ class GameState():
         possibleMoves = []
         pieceName = self.state[move.startRow][move.startCol][1]
         self.getPieceMove[pieceName](
-            move.startRow, move.startCol, possibleMoves)
+            move.startRow, move.startCol, possibleMoves, self.getPlayerColor(self.isWhiteTurn))
         # return move in possibleMoves
         if move in possibleMoves:
-            self.makeMove(move)
+            self.switchPieces(move)
             status = self.inCheck()
-            self.undoMove()
+            self.unswitchPieces(move)
             return not status
 
         return False
+
+    def inCheck(self):
+        # check if the king's square is under attack
+        if self.isWhiteTurn:
+            return self.squareUnderAttack(self.whiteKingLocation)
+        else:
+            return self.squareUnderAttack(self.blackKingLocation)
+
+    def squareUnderAttack(self, location):
+        # check if it's the other player's turn to make a move, can he capture the king ?
+        oppMoves = self.getAllPossibleMoves(not self.isWhiteTurn)
+        # check if any of the those moves are attacking the king
+        for p, Pmove in oppMoves.items():
+            print(p)
+            for move in Pmove:
+                print(move,
+                      (move.startRow, move.startCol),
+                      (move.endRow, move.endCol), location)
+                if (move.endRow, move.endCol) == location:
+                    return True
+        # we have to return the turns so this function doesn't mess who can play now
+        return False
+
+    def getAllPossibleMoves(self, enemyTurn):
+        moves = {}
+        for r in range(len(self.state)):
+            for c in range(len(self.state[r])):
+                turn = self.state[r][c][0]
+                if turn == self.getPlayerColor(enemyTurn):
+                    piece = self.state[r][c][1]
+                    if self.state[r][c] not in moves.keys():
+                        moves[self.state[r][c]] = []
+                    self.getPieceMove[piece](
+                        r, c, moves[self.state[r][c]], turn)
+        return moves
+
+    """
+    get the player's color
+    """
+
+    def getPlayerColor(self, isWhite):
+        return ['b', 'w'][isWhite]
 
     """
     Get all possible moves for a pawn
     """
 
-    def getPawnMoves(self, r, c, moves):
-        coef = -1 if self.isWhiteTurn else 1
+    def getPawnMoves(self, r, c, moves, player):
+        coef = -1 if player == "w" else 1
         if self.state[r + coef * 1][c] == "--":
             moves.append(Move((r, c), (r + coef * 1, c)))
             if self.isWhiteTurn:
@@ -138,8 +227,7 @@ class GameState():
     Get all possible moves for a knight
     """
 
-    def getKnightMoves(self, r, c, moves):
-        player = "w" if self.isWhiteTurn else "b"
+    def getKnightMoves(self, r, c, moves, player):
         directions = [(2, 1), (2, -1), (-2, 1), (-2, -1),
                       (1, 2), (1, -2), (-1, 2), (-1, -2)]
         for i, j in directions:
@@ -151,14 +239,12 @@ class GameState():
     Get all possible moves for a Rock
     """
 
-    def getRockMoves(self, r, c, moves):
-        player = "w" if self.isWhiteTurn else "b"
+    def getRockMoves(self, r, c, moves, player):
         i = 1
         while (r + i) in range(0, self.dimension) and self.state[r + i][c] == "--":
             moves.append(Move((r, c), (r + i, c)))
             i += 1
         if (r + i) in range(0, self.dimension) and self.state[r + i][c][0] != player:
-            print("oops")
             moves.append(Move((r, c), (r + i, c)))
         i = 1
         while (r - i) in range(0, self.dimension) and self.state[r - i][c] == "--":
@@ -180,8 +266,12 @@ class GameState():
         if (c - i) in range(0, self.dimension) and self.state[r][c - i][0] != player:
             moves.append(Move((r, c), (r, c - i)))
 
-    def getBishopMoves(self, r, c, moves):
-        enemy_color = "b" if self.isWhiteTurn else "w"
+    """
+    Get all possible moves for a Bishiop
+    """
+
+    def getBishopMoves(self, r, c, moves, player):
+        enemy_color = "b" if player == "w" else "w"
         directions = [[-1, -1], [-1, 1], [1, 1], [1, -1]]
         for d in directions:
             for i in range(1, 8):
@@ -200,8 +290,12 @@ class GameState():
                 else:  # off board
                     break
 
-    def getQueenMoves(self, r, c, moves):
-        enemy_color = "b" if self.isWhiteTurn else "w"
+    """
+    Get all possible moves for a Queen
+    """
+
+    def getQueenMoves(self, r, c, moves, player):
+        enemy_color = "b" if player == "w" else "w"
         directions = [[0, -1], [-1, 0], [0, 1],
                       [1, 0], [-1, -1], [-1, 1], [1, 1], [1, -1]]
         for d in directions:
@@ -222,8 +316,12 @@ class GameState():
                 else:  # off board
                     break
 
-    def getKingMoves(self, r, c, moves):
-        enemy_color = "b" if self.isWhiteTurn else "w"
+    """
+    Get all possible moves for a King
+    """
+
+    def getKingMoves(self, r, c, moves, player):
+        enemy_color = "b" if player == "w" else "w"
         directions = [[0, -1], [-1, 0], [0, 1],
                       [1, 0], [-1, -1], [-1, 1], [1, 1], [1, -1]]
         for d in directions:
@@ -244,37 +342,3 @@ class GameState():
                 else:  # off board
 
                     break
-
-    def getAllPossibleMoves(self, _turn):
-        moves = {}
-        for r in range(len(self.state)):
-            for c in range(len(self.state[r])):
-                turn = self.state[r][c][0]
-                if (turn == 'w' and _turn) or (turn == 'b' and not _turn):
-                    piece = self.state[r][c][1]
-                    if f'{turn}{piece}' not in moves.keys():
-                        moves[f'{turn}{piece}'] = []
-                    self.getPieceMove[piece](r, c, moves[f'{turn}{piece}'])
-        return moves
-
-    def inCheck(self):
-        # check if the king's square is under attack
-        if self.isWhiteTurn:
-            return self.squareUnderAttack(self.blackKingLocation, not self.isWhiteTurn)
-        else:
-            return self.squareUnderAttack(self.whiteKingLocation, self.isWhiteTurn)
-
-    def squareUnderAttack(self, location, _turn):
-        # check if it's the other player's turn to make a move, can he capture the king ?
-        oppMoves = self.getAllPossibleMoves(self.isWhiteTurn)
-        # check if any of the those moves are attacking the king
-        for p, Pmove in oppMoves.items():
-            print(p)
-            for move in Pmove:
-                print(move,
-                      (move.startRow, move.startCol),
-                      (move.endRow, move.endCol), location)
-                if (move.endRow, move.endCol) == location:
-                    return True
-        # we have to return the turns so this function doesn't mess who can play now
-        return False
