@@ -62,3 +62,9 @@ class GameGraphics():
         boardSurface = self.__drawSquars(selectedSq)
         boardSurface = self.__drawPieces(boardSurface, gameState)
         self.screen.blit(boardSurface, (0, 0))
+
+    def promotionListRender(self):
+        print("testing passing function")
+        temp_surface = pygame.Surface((100, 100))
+        temp_surface.fill((255, 0, 0))
+        self.screen.blit(temp_surface, (self.WIDTH - 100, 0))
