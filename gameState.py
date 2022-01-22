@@ -5,9 +5,9 @@ class GameState():
     def __init__(self) -> None:
 
         self.state = [
-            ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
-            ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["bp", "bp", "bp", "bp", "wp", "bp", "bp", "bp"],
+            ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -55,6 +55,8 @@ class GameState():
 
     def pawnPromotion(self, coord, choose):
         promotions = ["R", "N", "B", "Q"]
+        newPiece = self.getPlayerColor(self.isWhiteTurn)+promotions[choose]
+        self.state[coord[0]][coord[1]] = newPiece
 
     def checkPawnPromotion(self):
         for idx, i in enumerate(self.state[0]):
@@ -105,6 +107,9 @@ class GameState():
         #     self.state[move.endRow][move.endCol] = movedPiece
         #     self.logs.append(Move((move.endRow, move.endCol),
         #                      (move.endRow, move.endCol), movedPiece))
+        pawnPromotion = self.checkPawnPromotion()
+        if pawnPromotion:
+            self.pawnPromotion(pawnPromotion, -1)
         self.selectedSq = None
         self.playerSelections.pop()
         print(
@@ -232,11 +237,11 @@ class GameState():
             moves.append(Move((r, c), (r + coef * 1, c),
                          self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c))))
             if player == "w":
-                if r + coef * 2 >= self.dimension // 2:
+                if r + coef * 2 >= self.dimension // 2 and self.state[r + coef * 2][c]:
                     moves.append(Move((r, c), (r + coef * 2, c),
                                  self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
             else:
-                if r + coef * 2 < self.dimension // 2:
+                if r + coef * 2 < self.dimension // 2 and self.state[r + coef * 2][c]:
                     moves.append(Move((r, c), (r + coef * 2, c),
                                  self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
         if c < 7 and self.state[r + coef * 1][c + 1] != "--":
