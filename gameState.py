@@ -146,6 +146,8 @@ class GameState():
         self.getPieceMove[pieceName](
             move.startRow, move.startCol, possibleMoves, self.getPlayerColor(self.isWhiteTurn))
         # return move in possibleMoves
+        for i in possibleMoves:
+            print(i)
         if move in possibleMoves:
             self.switchPieces(move)
             status = self.inCheck()
@@ -193,9 +195,9 @@ class GameState():
         for p, Pmove in oppMoves.items():
             for move in Pmove:
                 if (move.endRow, move.endCol) == location:
-                    # print(move,
-                    #       (move.startRow, move.startCol),
-                    #       (move.endRow, move.endCol), location)
+                    print("Check! ", move,
+                          (move.startRow, move.startCol),
+                          (move.endRow, move.endCol), location)
                     return True
         # we have to return the turns so this function doesn't mess who can play now
         return False
@@ -229,7 +231,7 @@ class GameState():
         if self.state[r + coef * 1][c] == "--":
             moves.append(Move((r, c), (r + coef * 1, c),
                          self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c))))
-            if self.isWhiteTurn:
+            if player == "w":
                 if r + coef * 2 >= self.dimension // 2:
                     moves.append(Move((r, c), (r + coef * 2, c),
                                  self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
