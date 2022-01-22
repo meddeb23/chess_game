@@ -1,3 +1,5 @@
+from site import ENABLE_USER_SITE
+from tkinter.tix import Tree
 from Move import Move
 
 
@@ -5,11 +7,11 @@ class GameState():
     def __init__(self) -> None:
 
         self.state = [
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["bp", "bp", "bp", "bp", "wp", "bp", "bp", "bp"],
             ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
+            ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "wp", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
@@ -22,6 +24,8 @@ class GameState():
         self.logs = []
         self.whiteKingLocation = (7, 4)
         self.blackKingLocation = (0, 4)
+        self.checkMate = False
+        self.isEnPassant = ()
         self.getPieceMove = {
             "p": self.getPawnMoves,
             "R": self.getRockMoves,
@@ -48,7 +52,8 @@ class GameState():
             else:
                 move = Move(self.selectedSq, coord, self.getPieceName(self.selectedSq),
                             self.getPieceName(coord))
-                if self.isValidMove(move):
+                status, move = self.isValidMove(move)
+                if status:
                     self.makeMove(move)
                 else:
                     print("Not a valid move!")
@@ -75,8 +80,10 @@ class GameState():
     """
 
     def switchPieces(self, move):
-        self.state[move.endRow][move.endCol] = move.movedPiece
+        if move.isEnpassantMove:
+            self.state[move.startRow][move.endCol] = "--"
         self.state[move.startRow][move.startCol] = "--"
+        self.state[move.endRow][move.endCol] = move.movedPiece
         # update the king's location
         if move.movedPiece == "wk":
             self.whiteKingLocation = (move.endRow, move.endCol)
@@ -88,8 +95,13 @@ class GameState():
     """
 
     def unswitchPieces(self, move):
+        if move.isEnpassantMove:
+            self.state[move.startRow][move.endCol] = move.capturedPiece
+            self.state[move.endRow][move.endCol] = "--"
+            self.isEnPassant = (move.endRow, move.endCol)
+        else:
+            self.state[move.endRow][move.endCol] = move.capturedPiece
         self.state[move.startRow][move.startCol] = move.movedPiece
-        self.state[move.endRow][move.endCol] = move.capturedPiece
         if move.movedPiece == "wk":
             self.whiteKingLocation = (move.startRow, move.startCol)
         elif move.movedPiece == "bk":
@@ -102,11 +114,6 @@ class GameState():
     def makeMove(self, move):
         self.switchPieces(move)
         self.logs.append(move)
-        # if movedPiece[1] == "p":
-        #     # newPiece = self.checkPawnPromotion(move, movedPiece)
-        #     self.state[move.endRow][move.endCol] = movedPiece
-        #     self.logs.append(Move((move.endRow, move.endCol),
-        #                      (move.endRow, move.endCol), movedPiece))
         pawnPromotion = self.checkPawnPromotion()
         if pawnPromotion:
             self.pawnPromotion(pawnPromotion, -1)
@@ -116,10 +123,15 @@ class GameState():
             f"player: {self.getPlayerColor(self.isWhiteTurn)}, {move}")
 
         self.isWhiteTurn = not self.isWhiteTurn
-        if self.isCheckMate():
-            print("checkmate !")
-        if self.isStaleMate():
-            print("Stalemate !")
+
+        # self.checkMate = self.isCheckMate()
+        # self.Stalemate = self.isStaleMate()
+
+        if move.movedPiece[1] == "p" and abs(move.startRow - move.endRow) == 2:
+            self.isEnPassant = (
+                (move.startRow + move.endRow) // 2, move.startCol)
+        else:
+            self.isEnPassant = ()
 
     '''
     undo the last move
@@ -138,7 +150,6 @@ class GameState():
         for r in range(len(board)):
             for c in range(len(board[r])):
                 if f"{playerColor}K" == board[r][c]:
-                    print((r, c))
                     return (r, c)
 
     """
@@ -151,15 +162,16 @@ class GameState():
         self.getPieceMove[pieceName](
             move.startRow, move.startCol, possibleMoves, self.getPlayerColor(self.isWhiteTurn))
         # return move in possibleMoves
-        for i in possibleMoves:
-            print(i)
-        if move in possibleMoves:
-            self.switchPieces(move)
-            status = self.inCheck()
-            self.unswitchPieces(move)
-            return not status
+        for idx, m in enumerate(possibleMoves):
+            if move == m:
+                move = m
+                self.switchPieces(move)
+                status = self.inCheck()
+                self.unswitchPieces(move)
+                move = m
+                return not status, move
 
-        return False
+        return False, move
 
     def inCheck(self):
         # check if the king's square is under attack
@@ -244,12 +256,21 @@ class GameState():
                 if r + coef * 2 < self.dimension // 2 and self.state[r + coef * 2][c]:
                     moves.append(Move((r, c), (r + coef * 2, c),
                                  self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
-        if c < 7 and self.state[r + coef * 1][c + 1] != "--":
-            moves.append(Move((r, c), (r + coef * 1, c + 1),
-                         self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c + 1))))
-        if c > 0 and self.state[r + coef * 1][c - 1] != "--":
-            moves.append(Move((r, c), (r + coef * 1, c - 1),
-                         self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c - 1))))
+        if c < 7:
+            if self.state[r + coef * 1][c + 1] != "--":
+                moves.append(Move((r, c), (r + coef * 1, c + 1),
+                                  self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c + 1))))
+            if (r + coef * 1, c + 1) == self.isEnPassant:
+                moves.append(Move((r, c), (r + coef * 1, c + 1),
+                                  self.getPieceName((r, c)), self.getPieceName((r, c + 1)), isEnPassantMove=True))
+
+        if c > 0:
+            if self.state[r + coef * 1][c - 1] != "--":
+                moves.append(Move((r, c), (r + coef * 1, c - 1),
+                                  self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c - 1))))
+            if (r + coef * 1, c-1) == self.isEnPassant:
+                moves.append(Move((r, c), (r + coef * 1, c - 1),
+                                  self.getPieceName((r, c)), self.getPieceName((r, c - 1)), isEnPassantMove=True))
 
     """
     Get all possible moves for a knight
