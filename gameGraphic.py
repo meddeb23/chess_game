@@ -71,3 +71,12 @@ class GameGraphics():
         temp_surface.fill((255, 0, 0))
         # self.layers.append((temp_surface, (self.WIDTH - 100, 0)))
         self.screen.blit(temp_surface, (self.WIDTH - 100, 0))
+
+    def renderMenu(self):
+        font = pygame.font.Font("fonts/Roboto-Medium.ttf", 40)
+        # font = pygame.font.Font("fonts/Neonderthaw-Regular.ttf", 50)
+        title = font.render("Chess Game", False, "Green")
+        
+
+
+
