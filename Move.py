@@ -6,16 +6,18 @@ class Move:
                    "e": 4, "d": 3, "c": 2, "b": 1, "a": 0}
     colsToFiles = {k: v for v, k in filesToCols.items()}
 
-    def __init__(self, start, end, movedPiece, capturedPiece="--") -> None:
+    def __init__(self, start, end, movedPiece, capturedPiece="--", isEnPassantMove=False) -> None:
         self.startRow = start[0]
         self.startCol = start[1]
         self.endRow = end[0]
         self.endCol = end[1]
         self.capturedPiece = capturedPiece
         self.movedPiece = movedPiece
+        self.isEnpassantMove = isEnPassantMove
+        self.moveID = f"{self.movedPiece}{self.getRankFile(self.startCol, self.startRow)}{self.getRankFile(self.endCol, self.endRow)}"
 
     def __eq__(self, __o: object) -> bool:
-        return __o.startRow == self.startRow and __o.startCol == self.startCol and __o.endRow == self.endRow and __o.endCol == self.endCol
+        return __o.moveID == self.moveID
 
     def __str__(self) -> str:
         capture = ""
