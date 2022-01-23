@@ -73,12 +73,12 @@ class GameState():
                 move = Move(self.selectedSq, coord, self.getPieceName(self.selectedSq),
                             self.getPieceName(coord))
                 status, move = self.isValidMove(move)
-                print(
-                    f"""{"-"*20}\n{move}\nis a valid move : {status}\n{"-"*20}""")
+                # print(
+                #     f"""{"-"*20}\n{move}\nis a valid move : {status}\n{"-"*20}""")
                 if status:
                     self.makeMove(move)
-                else:
-                    print("Not a valid move!")
+                # else:
+                #     print("Not a valid move!")
         return self.selectedSq
 
     def pawnPromotion(self, coord, choose):
@@ -137,10 +137,10 @@ class GameState():
             if capturedPiece != "-":
                 if capturedColor == "b":
                     self.blackScore -= self.pieceValue[capturedPiece]
-                    print(f"New Score for black is {self.blackScore}")
+                    # print(f"New Score for black is {self.blackScore}")
                 elif capturedColor == "w":
                     self.whiteScore -= self.pieceValue[capturedPiece]
-                    print(f"New Score for white is {self.whiteScore}")
+                    # print(f"New Score for white is {self.whiteScore}")
         self.scorelogs.append([self.whiteScore, self.blackScore])
 
     def undoUpdateScore(self):
@@ -148,9 +148,9 @@ class GameState():
             self.scorelogs.pop()
             self.whiteScore = self.scorelogs[-1][0]
             self.blackScore = self.scorelogs[-1][1]
-            print("Current Scores Are :")
-            print(f"WhiteScore : {self.whiteScore}")
-            print(f"BlackScore : {self.blackScore}")
+            # print("Current Scores Are :")
+            # print(f"WhiteScore : {self.whiteScore}")
+            # print(f"BlackScore : {self.blackScore}")
 
     def unswitchPieces(self, move):
         if move.isEnpassantMove:
@@ -405,7 +405,6 @@ class GameState():
     def isCheckMate(self):
         if self.inCheck():
             if not self.existValidMove():
-                print("Checkmate!")
                 self.checkmate = True
                 self.isgameover = True
                 return True
@@ -415,7 +414,6 @@ class GameState():
     def isStaleMate(self):
         if not self.inCheck():
             if not self.existValidMove():
-                print("Stalemate")
                 self.stalemate = True
                 self.isgameover = True
                 return True

@@ -35,7 +35,7 @@ def getBestMove(gameState, validMoves):
             oppMinMaxScore = oppMaxScore
             bestPlayerMove = currentMove
         gameState.undoMove()
-    print(f"best move is \n:{bestPlayerMove, score}")
+    # print(f"best move is \n:{bestPlayerMove, score}")
     return bestPlayerMove
 
 
