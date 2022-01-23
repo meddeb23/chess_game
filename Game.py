@@ -41,6 +41,9 @@ class Game:
     def startGame(self):
         self.currentScreen = self.gameScreen
 
+    def setMainMenu(self):
+        self.currentScreen = self.mainMenu
+
     """
         render Graphics
     """

@@ -15,7 +15,7 @@ class GameScreen():
         self.selectedPiece = ()
         self.gameState = GameState()
         self.gameOverMenu = EndGameMenu(
-            game, "Game Over", (game.WIDTH, game.HEIGHT))
+            game, "Game Over", (game.WIDTH, game.HEIGHT), [self.restartGame, game.setMainMenu])
         self.layers = []
 
     def __drawSquars(self, selectedSq):
@@ -59,6 +59,10 @@ class GameScreen():
         if x < self.DIMENSION * self.SQ_SIZE and y < self.DIMENSION * self.SQ_SIZE:
             return (y // self.SQ_SIZE, x // self.SQ_SIZE)
         return None
+
+    def restartGame(self):
+        self.gameState = GameState()
+        self.layers = []
 
     def render(self):
         boardSurface = self.__drawSquars(self.selectedPiece)

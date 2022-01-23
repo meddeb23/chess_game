@@ -6,15 +6,15 @@ from styles.colors import Colors
 
 
 class EndGameMenu(Menu):
-    def __init__(self, game, title, dimension) -> None:
+    def __init__(self, game, title, dimension, actions=[]) -> None:
         super().__init__(game, title, dimension)
         self.Width, self.height = (300, 300)
         self.title = Text(title, color=Colors.LIGHT, fontSize=30)
         self.listItmes = [
             Button(50, 130, "start new game", color=Colors.LIGHT,
-                   size=20, action=game.startGame),
+                   size=20, action=actions[0]),
             Button(50, 170, "Quit game", color=Colors.LIGHT,
-                   size=20, action=game.close)
+                   size=20, action=actions[1])
         ]
 
     def render(self) -> None:
@@ -27,6 +27,7 @@ class EndGameMenu(Menu):
         temp_surface.fill(Colors.RED)
         self.title.render(temp_surface, 100, 50)
         for item in self.listItmes:
-            item.render(temp_surface)
+            item.render(temp_surface, (self.MID_WIDTH - self.Width //
+                                       2, self.MID_HIGHT - self.height//2))
         screen.blit(temp_surface, (self.MID_WIDTH - self.Width //
                     2, self.MID_HIGHT - self.height//2))

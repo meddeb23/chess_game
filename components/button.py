@@ -22,8 +22,9 @@ class Button:
             f"./images/right-arrow.png").convert_alpha()
         self.listStyle = transform.scale(self.listStyle, (13, 13))
 
-    def render(self, surface):
+    def render(self, surface, offset=(0, 0)):
         pos = mouse.get_pos()
+        pos = (pos[0]-offset[0], pos[1]-offset[1])
 
         if self.titleRect.collidepoint(pos):
             surface.blit(self.listStyle, (self.x - 20, self.y + 7))
