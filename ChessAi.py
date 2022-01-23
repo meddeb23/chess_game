@@ -10,48 +10,33 @@ def getRandomMove(validMoves):
 
 
 def getBestMove(gameState, validMoves):
-    bestMove = None
-    score = 0
     # check if i'm trying to maximize or minimize the score
-    playerCoef = [1, -1][gameState.isWhiteTurn]
-    maxScore = playerCoef * INFINITY
-
+    playerCoef = [-1, 1][gameState.isWhiteTurn]
+    oppMinMaxScore = INFINITY
+    bestPlayerMove = None
+    random.shuffle(validMoves)
     for currentMove in validMoves:
         gameState.makeMove(currentMove)
-        # since the maxscore is -infinity
-        # if it's white's turn then we try to maximize to positive infinity
-        # if it's black's turn then we try to maximize to negative negative infinity (postive infinity)
-        # both black and white are trying to maximize their scores
+        oppMoves = gameState.getAllPossibleValidMoves(gameState.isWhiteTurn)
+        oppMaxScore = -INFINITY
+        for oppMove in oppMoves:
+            gameState.makeMove(oppMove)
+            if gameState.checkmate:
+                score = - playerCoef * INFINITY
+            elif gameState.stalemate:
+                score = STALEMATE
+            else:
+                score = -playerCoef * evaluate_based_on_material(gameState)
 
-        if gameState.checkmate:
-            score = playerCoef * INFINITY
-        elif gameState.stalemate:
-            score = STALEMATE
-        else:
-            score = evaluate_based_on_material(gameState)
-
-        # black perspective : try to minimize the score
-        # if the score is really negative then the -1 coef will make it positive
-        # (black is winning /black => will try to make the score bigger to win more)
-        # if the score is really positive then the 11 coef will keep it positive
-        # (white is winning/ white => will try to make the score bigger to win more)
-        if playerCoef == -1:
-
-            if score > maxScore:
-                print(currentMove)
-                print(score)
-                maxScore = score
-                bestMove = currentMove
-        else:
-            if score < maxScore:
-                print(currentMove)
-                print(score)
-                maxScore = score
-                bestMove = currentMove
+            if score > oppMaxScore:
+                oppMaxScore = score
+            gameState.undoMove()
+        if oppMaxScore < oppMinMaxScore:
+            oppMinMaxScore = oppMaxScore
+            bestPlayerMove = currentMove
         gameState.undoMove()
-    print(f"best move is \n:{bestMove, score}")
-
-    return bestMove
+    print(f"best move is \n:{bestPlayerMove, score}")
+    return bestPlayerMove
 
 
 def evaluate_based_on_material(gameState):
