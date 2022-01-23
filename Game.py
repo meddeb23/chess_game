@@ -1,6 +1,6 @@
 import pygame
 
-from gameGraphic import GameGraphics
+from gameGraphic import GameScreen
 from components.menus.startMenu import StartMenu
 from styles.colors import Colors
 
@@ -24,7 +24,7 @@ class Game:
         """
         self.mainMenu = StartMenu(
             self, title="Chess game", dimension=(self.WIDTH, self.HEIGHT))
-        self.gameGraphic = GameGraphics(self, )
+        self.gameScreen = GameScreen(self, )
         self.currentScreen = self.mainMenu
 
     """
@@ -38,7 +38,7 @@ class Game:
     """
 
     def startGame(self):
-        self.currentScreen = self.gameGraphic
+        self.currentScreen = self.gameScreen
 
     """
         render Graphics

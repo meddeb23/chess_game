@@ -4,7 +4,7 @@ from gameState import GameState
 from styles.colors import Colors
 
 
-class GameGraphics():
+class GameScreen():
     def __init__(self, game, boardDimension=8, screenHeight=500, screenWidth=800, ) -> None:
         self.DIMENSION = boardDimension  # number of squars
         self.WIDTH, self.HEIGHT = screenWidth, screenHeight

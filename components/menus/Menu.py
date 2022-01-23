@@ -1,5 +1,5 @@
 from styles.colors import Colors
-from typing import Text
+from components.text import Text
 
 
 class Menu:
