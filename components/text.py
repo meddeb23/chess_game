@@ -8,3 +8,6 @@ class Text:
 
     def getSurface(self):
         return self.title
+
+    def render(self, screen, x, y):
+        screen.blit(self.title, ((x) - (self.title.get_width() // 2), y))
