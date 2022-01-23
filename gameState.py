@@ -55,6 +55,7 @@ class GameState():
                 move = Move(self.selectedSq, coord, self.getPieceName(self.selectedSq),
                             self.getPieceName(coord))
                 status, move = self.isValidMove(move)
+                print(status, move)
                 if status:
                     self.makeMove(move)
                 else:
@@ -166,13 +167,15 @@ class GameState():
 
         if self.state[row][col + 1] == '--' and self.state[row][col + 2] == '--':
             if not self.squareUnderAttack((row, col + 1)) and not self.squareUnderAttack((row, col + 2)):
-                moves.append(Move((row, col), (row, col + 2), self.getPieceName(location), is_castle_move=True))
+                moves.append(Move((row, col), (row, col + 2),
+                             self.getPieceName(location), is_castle_move=True))
 
     def getQueensideCastleMoves(self, location, moves):
         row, col = location
         if self.state[row][col - 1] == '--' and self.state[row][col - 2] == '--' and self.state[row][col - 3] == '--':
             if not self.squareUnderAttack((row, col - 1)) and not self.squareUnderAttack((row, col - 2)):
-                moves.append(Move((row, col), (row, col - 2), self.getPieceName(location), is_castle_move=True))
+                moves.append(Move((row, col), (row, col - 2),
+                             self.getPieceName(location), is_castle_move=True))
 
     def makeMove(self, move):
 
@@ -217,38 +220,38 @@ class GameState():
 
     def castle(self, move):
         if move.is_castle_move:
-            kingCastleMove=None
-            rookCastleMove=None
+            kingCastleMove = None
+            rookCastleMove = None
             if move.endCol - move.startCol == 2:  # king-side
-                ##update king position
+                # update king position
                 kingCastleMove = Move((move.startRow, move.startCol), (move.endRow, move.endCol),
                                       self.getPieceName((move.startRow, move.startCol)), "--", is_castle_move=True)
                 self.switchPieces(kingCastleMove)
 
-                ##update roock position
+                # update roock position
                 rookCastleMove = Move((move.endRow, move.endCol + 1), (move.endRow, move.endCol - 1),
                                       self.getPieceName((move.endRow, move.endCol + 1)), "--", is_castle_move=True)
                 self.switchPieces(rookCastleMove)
 
             else:  # queen-side
-                ##update king position
+                # update king position
                 kingCastleMove = Move((move.startRow, move.startCol), (move.endRow, move.endCol),
                                       self.getPieceName((move.startRow, move.startCol)), "--", is_castle_move=True)
                 self.switchPieces(kingCastleMove)
 
-                ##update roock position
+                # update roock position
                 rookCastleMove = Move((move.endRow, move.endCol - 2), (move.endRow, move.endCol + 1),
                                       self.getPieceName((move.endRow, move.endCol - 2)), "--", is_castle_move=True)
                 self.switchPieces(rookCastleMove)
 
-            #Add the castle moves to the logsz
+            # Add the castle moves to the logsz
             self.logs.append(kingCastleMove)
             self.logs.append(rookCastleMove)
 
     def undoMove(self):
         # check how many times are we going to undo :
-        ## if castle move we undo two times
-        if len(self.logs)>0:
+        # if castle move we undo two times
+        if len(self.logs) > 0:
             i = 1
             lastMove = self.logs[-1]
             if lastMove.is_castle_move:
@@ -262,7 +265,7 @@ class GameState():
                     self.unswitchPieces(move)
 
                 # undo castling rights
-                if len(self.castle_rights_log) >0:
+                if len(self.castle_rights_log) > 0:
                     self.castle_rights_log.pop()
                     if len(self.castle_rights_log) > 0:
                         self.current_castling_rights = self.castle_rights_log[-1]
@@ -293,7 +296,7 @@ class GameState():
                 cm[i].is_castle_move = True
 
                 if move.startCol == cm[i].startCol and move.endCol == cm[i].endCol and move.startRow == cm[
-                    i].startRow and move.endRow == cm[i].endRow:
+                        i].startRow and move.endRow == cm[i].endRow:
                     move = cm[i]
                 possibleMoves.append(cm[i])
 

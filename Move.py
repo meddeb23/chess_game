@@ -18,7 +18,7 @@ class Move:
         self.moveID = f"{self.movedPiece}{self.getRankFile(self.startCol, self.startRow)}{self.getRankFile(self.endCol, self.endRow)}"
 
     def __eq__(self, __o: object) -> bool:
-        return __o.moveID == self.moveID and __o.capturedPiece == self.capturedPiece
+        return __o.moveID == self.moveID
 
     def __str__(self) -> str:
         capture = ""
