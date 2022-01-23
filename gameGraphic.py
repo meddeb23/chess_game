@@ -4,6 +4,8 @@ from components.menus.endGameMenu import EndGameMenu
 from gameState import GameState
 from styles.colors import Colors
 
+import ChessAi
+
 
 class GameScreen():
     def __init__(self, game, boardDimension=8, screenHeight=500, screenWidth=800, ) -> None:
@@ -17,6 +19,11 @@ class GameScreen():
         self.gameOverMenu = EndGameMenu(
             game, "Game Over", (game.WIDTH, game.HEIGHT), [self.restartGame, game.setMainMenu])
         self.layers = []
+        self.player_one = True  # for white : True => Human , False => AI
+        self.player_two = False  # for black : True => Human , False => AI
+        self.move_undone = False
+        self.move_made = False
+        self.DEPTH = 2
 
     def __drawSquars(self, selectedSq):
         boardSize = self.SQ_SIZE * self.DIMENSION
@@ -65,6 +72,20 @@ class GameScreen():
         self.layers = []
 
     def render(self):
+
+        if not self.gameState.isgameover and not self.human_turn and not self.move_undone:
+            aimove = ChessAi.getBestMove(
+                self.gameState, self.gameState.getAllPossibleValidMoves(self.gameState.isWhiteTurn))
+            if aimove is None:
+                aimove = ChessAi.getRandomMove(
+                    self.gameState.getAllPossibleValidMoves(self.gameState.isWhiteTurn))
+            self.gameState.makeMove(aimove)
+            move_made = True
+
+        if move_made:
+            move_made = False
+            move_undone = False
+
         boardSurface = self.__drawSquars(self.selectedPiece)
         boardSurface = self.__drawPieces(boardSurface)
         self.screen.blit(boardSurface, (0, 0))
@@ -72,19 +93,27 @@ class GameScreen():
             # layer.render(self.screen)
             layer(self.screen)
 
+    def isGameOver(self):
+        return not self.gameState.checkmate and not self.gameState.stalemate
+
+    def isHumainTurn(self):
+        return (self.gameState.isWhiteTurn and self.player_one) or (not self.gameState.isWhiteTurn and self.player_two)
+
     def eventHandler(self, event):
         if self.gameState.checkmate:
             self.layers.append((self.gameOverMenu.render, (100, 100)))
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if not self.gameState.checkmate and not self.gameState.stalemate:
+            if self.isGameOver() and self.isHumainTurn():
                 sqCoord = self.getPieceIndex(pygame.mouse.get_pos())
                 if sqCoord != None:
                     self.selectedPiece = self.gameState.selectPiece(sqCoord)
+                    self.move_made = True
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_z:
-                if not self.gameState.checkmate and not self.gameState.stalemate:
+                if self.isGameOver():
                     self.gameState.undoMove()
-
+                    self.move_made = True
+                    self.move_undone = True
         # pawnSq = self.gameState.checkPawnPromotion()
         # if pawnSq:
         #     print("Pawn promotion graphic handler")
