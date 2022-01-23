@@ -17,16 +17,6 @@ class GameState():
         ]
 
         # self.state = [
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "wp"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "bp"],
-        #     ["--", "--", "--", "--", "--", "--", "--", "--"],
-        # ]
-        # self.state = [
         #     ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
         #     ["bp", "bp", "--", "--", "bp", "--", "--", "--"],
         #     ["--", "--", "--", "--", "--", "bp", "--", "bp"],
@@ -69,18 +59,20 @@ class GameState():
                 self.selectedSq = coord
                 self.playerSelections.append(coord)
         else:
-            if selectedPiece == self.state[self.selectedSq[0]][self.selectedSq[1]]:
+            if selectedPiece[0] == player:
                 self.selectedSq = None
                 self.playerSelections.pop()
             else:
                 move = Move(self.selectedSq, coord, self.getPieceName(self.selectedSq),
                             self.getPieceName(coord))
                 status, move = self.isValidMove(move)
-                print(status, move)
+                print(
+                    f"""{"-"*20}\n{move}\nis a valid move : {status}\n{"-"*20}""")
                 if status:
                     self.makeMove(move)
                 else:
                     print("Not a valid move!")
+        return self.selectedSq
 
     def pawnPromotion(self, coord, choose):
         promotions = ["R", "N", "B", "Q"]

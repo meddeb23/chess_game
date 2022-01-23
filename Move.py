@@ -24,7 +24,7 @@ class Move:
         capture = ""
         if self.capturedPiece:
             capture += "captured " + self.capturedPiece
-        return f"{self.movedPiece} move {self.getRankFile(self.startCol, self.startRow)} to {self.getRankFile(self.endCol, self.endRow)} {capture} and is_castle_move: {self.is_castle_move}"
+        return f"{self.movedPiece} move {self.getRankFile(self.startCol, self.startRow)} to {self.getRankFile(self.endCol, self.endRow)} {capture}\nis_castle_move: {self.is_castle_move}\nis_En_passant: {self.isEnpassantMove}"
 
     def getRankFile(self, c, r):
         return self.colsToFiles[c] + self.rowsToRanks[r]

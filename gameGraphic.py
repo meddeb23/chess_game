@@ -68,8 +68,7 @@ class GameGraphics():
         if event.type == pygame.MOUSEBUTTONDOWN:
             sqCoord = self.getPieceIndex(pygame.mouse.get_pos())
             if sqCoord != None:
-                self.gameState.selectPiece(sqCoord)
-                self.selectedPiece = sqCoord
+                self.selectedPiece = self.gameState.selectPiece(sqCoord)
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_z:
                 self.gameState.undoMove()
