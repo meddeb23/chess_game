@@ -10,17 +10,24 @@ class GameState():
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "wp", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
         ]
+        self.pieceValue = {"R": 5, "N": 3, "B": 5, "Q": 9, "k": 100, "p": 1}
 
         self.dimension = 8
+        self.isgameover = False
         self.selectedSq = None
         self.playerSelections = []  # track the user's squar selection history
         self.isWhiteTurn = True
         self.logs = []
+        # 1 king = 100 | 1 queen = 9 | 2 rooks = 5*2 = 10 | 2 knights = 3*2 = 6 | 2 bishops = 3*2 = 6 | 8 pawns = 8*1
+        # total = 139
+        self.whiteScore = 139
+        self.blackScore = 139
+        self.scorelogs = [[139,139]]
         self.whiteKingLocation = (7, 4)
         self.blackKingLocation = (0, 4)
         self.current_castling_rights = CastleRights(True, True, True, True)
@@ -63,7 +70,7 @@ class GameState():
 
     def pawnPromotion(self, coord, choose):
         promotions = ["R", "N", "B", "Q"]
-        newPiece = self.getPlayerColor(self.isWhiteTurn)+promotions[choose]
+        newPiece = self.getPlayerColor(self.isWhiteTurn) + promotions[choose]
         self.state[coord[0]][coord[1]] = newPiece
 
     def checkPawnPromotion(self):
@@ -97,6 +104,43 @@ class GameState():
     Unswitch Pieces
     """
 
+    def updateScore(self, pawnPromotion):
+        if pawnPromotion:
+            if self.isWhiteTurn:
+                # promoted to queen
+                self.whiteScore += (self.pieceValue["Q"]-1)
+                #print(f"New Score for white is {self.whiteScore}")
+
+
+            else:
+                # promoted to queen
+                self.whiteScore += (self.pieceValue["Q"]-1)
+                #print(f"New Score for black is {self.blackScore}")
+
+        else:
+            #piece captured
+            lastmove = self.logs[-1]
+            capturedPiece = lastmove.capturedPiece[1]
+            capturedColor = lastmove.capturedPiece[0]
+            if capturedPiece != "-":
+                if capturedColor == "b":
+                    self.blackScore -= self.pieceValue[capturedPiece]
+                    print(f"New Score for black is {self.blackScore}")
+                elif capturedColor == "w":
+                    self.whiteScore -= self.pieceValue[capturedPiece]
+                    print(f"New Score for white is {self.whiteScore}")
+        self.scorelogs.append([self.whiteScore, self.blackScore])
+
+
+    def undoUpdateScore(self):
+        if len(self.scorelogs) > 0:
+            self.scorelogs.pop()
+            self.whiteScore = self.scorelogs[-1][0]
+            self.blackScore = self.scorelogs[-1][1]
+            print("Current Scores Are :")
+            print(f"WhiteScore : {self.whiteScore}")
+            print(f"BlackScore : {self.blackScore}")
+
     def unswitchPieces(self, move):
         if move.isEnpassantMove:
             self.state[move.startRow][move.endCol] = move.capturedPiece
@@ -116,14 +160,14 @@ class GameState():
 
     def updateCastlingRights(self, move):
         if move.capturedPiece == "wR":
-            if move.end_col == 0:  # left rook
+            if move.endCol == 0:  # left rook
                 self.current_castling_rights.white_queen_side = False
-            elif move.end_col == 7:  # right rook
+            elif move.endCol == 7:  # right rook
                 self.current_castling_rights.white_king_side = False
         elif move.capturedPiece == "bR":
-            if move.end_col == 0:  # left rook
+            if move.endCol == 0:  # left rook
                 self.current_castling_rights.black_queen_side = False
-            elif move.end_col == 7:  # right rook
+            elif move.endCol == 7:  # right rook
                 self.current_castling_rights.black_king_side = False
 
         if move.movedPiece == 'wk':
@@ -168,17 +212,16 @@ class GameState():
         if self.state[row][col + 1] == '--' and self.state[row][col + 2] == '--':
             if not self.squareUnderAttack((row, col + 1)) and not self.squareUnderAttack((row, col + 2)):
                 moves.append(Move((row, col), (row, col + 2),
-                             self.getPieceName(location), is_castle_move=True))
+                                  self.getPieceName(location), is_castle_move=True))
 
     def getQueensideCastleMoves(self, location, moves):
         row, col = location
         if self.state[row][col - 1] == '--' and self.state[row][col - 2] == '--' and self.state[row][col - 3] == '--':
             if not self.squareUnderAttack((row, col - 1)) and not self.squareUnderAttack((row, col - 2)):
                 moves.append(Move((row, col), (row, col - 2),
-                             self.getPieceName(location), is_castle_move=True))
+                                  self.getPieceName(location), is_castle_move=True))
 
     def makeMove(self, move):
-
         # Update Castling Rights
         self.updateCastlingRights(move)
         # print(self.current_castling_rights)
@@ -187,7 +230,11 @@ class GameState():
             self.logs.append(move)
             pawnPromotion = self.checkPawnPromotion()
             if pawnPromotion:
+                self.updateScore(True)
                 self.pawnPromotion(pawnPromotion, -1)
+            else:
+                self.updateScore(False)
+
         # if movedPiece[1] == "p":
         #     # newPiece = self.checkPawnPromotion(move, movedPiece)
         #     self.state[move.endRow][move.endCol] = movedPiece
@@ -197,7 +244,7 @@ class GameState():
         # updateCastleRights
 
         self.selectedSq = None
-        self.playerSelections.pop()
+        self.playerSelections = []
         self.castle_rights_log.append(
             CastleRights(self.current_castling_rights.white_king_side, self.current_castling_rights.black_king_side,
                          self.current_castling_rights.white_queen_side, self.current_castling_rights.black_queen_side))
@@ -269,6 +316,14 @@ class GameState():
                     self.castle_rights_log.pop()
                     if len(self.castle_rights_log) > 0:
                         self.current_castling_rights = self.castle_rights_log[-1]
+                self.undoUpdateScore()
+                if self.checkmate:
+                    self.checkmate = False
+                    self.isgameover = False
+                if self.stalemate:
+                    self.stalemate = False
+                    self.isgameover = False
+
             self.isWhiteTurn = not self.isWhiteTurn
 
     def getKingPosition(self, board, playerColor):
@@ -296,7 +351,7 @@ class GameState():
                 cm[i].is_castle_move = True
 
                 if move.startCol == cm[i].startCol and move.endCol == cm[i].endCol and move.startRow == cm[
-                        i].startRow and move.endRow == cm[i].endRow:
+                    i].startRow and move.endRow == cm[i].endRow:
                     move = cm[i]
                 possibleMoves.append(cm[i])
 
@@ -338,12 +393,21 @@ class GameState():
 
     def isCheckMate(self):
         if self.inCheck():
-            return not self.existValidMove()
+            if not self.existValidMove():
+                print("Checkmate!")
+                self.checkmate = True
+                self.isgameover = True
+                return True
+
         return False
 
     def isStaleMate(self):
         if not self.inCheck():
-            return not self.existValidMove()
+            if not self.existValidMove():
+                print("Stalemate")
+                self.stalemate = True
+                self.isgameover = True
+                return True
         return False
 
     def squareUnderAttack(self, location):
@@ -371,6 +435,16 @@ class GameState():
 
         return moves
 
+    def getAllPossibleValidMoves(self, enemyTurn):
+        validMoves = []
+        possibleMoves = self.getAllPossibleMoves(enemyTurn)
+        for piece in possibleMoves:
+            for move in possibleMoves[piece]:
+                status, validmove = self.isValidMove(move)
+                if status:
+                    validMoves.append(validmove)
+        return validMoves
+
     """
     get the player's color
     """
@@ -389,12 +463,16 @@ class GameState():
                               self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c))))
             if player == "w":
                 if r + coef * 2 >= self.dimension // 2:
-                    moves.append(Move((r, c), (r + coef * 2, c),
-                                      self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
+                    if self.getPieceName((r + coef * 2, c)) == "--":
+                        moves.append(Move((r, c), (r + coef * 2, c),
+                                          self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
             else:
+
                 if r + coef * 2 < self.dimension // 2 and self.state[r + coef * 2][c]:
-                    moves.append(Move((r, c), (r + coef * 2, c),
-                                 self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
+                    if self.getPieceName((r + coef * 2, c)) == "--":
+
+                        moves.append(Move((r, c), (r + coef * 2, c),
+                                          self.getPieceName((r, c)), self.getPieceName((r + coef * 2, c))))
         if c < 7:
             if self.state[r + coef * 1][c + 1] != "--":
                 moves.append(Move((r, c), (r + coef * 1, c + 1),
@@ -407,7 +485,7 @@ class GameState():
             if self.state[r + coef * 1][c - 1] != "--":
                 moves.append(Move((r, c), (r + coef * 1, c - 1),
                                   self.getPieceName((r, c)), self.getPieceName((r + coef * 1, c - 1))))
-            if (r + coef * 1, c-1) == self.isEnPassant:
+            if (r + coef * 1, c - 1) == self.isEnPassant:
                 moves.append(Move((r, c), (r + coef * 1, c - 1),
                                   self.getPieceName((r, c)), self.getPieceName((r, c - 1)), isEnPassantMove=True))
 
