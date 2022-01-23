@@ -24,8 +24,9 @@ class Game:
         """
         self.mainMenu = StartMenu(
             self, title="Chess game", dimension=(self.WIDTH, self.HEIGHT))
-        self.gameScreen = GameScreen(self, )
+        self.gameScreen = GameScreen(self)
         self.currentScreen = self.mainMenu
+        # self.currentScreen = self.gameScreen
 
     """
         Close Game
@@ -57,7 +58,7 @@ class Game:
         while self.isRunning:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.isRunning = False
+                    self.close()
                 else:
                     self.currentScreen.eventHandler(event)
             self.render()

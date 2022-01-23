@@ -1,4 +1,5 @@
 import pygame
+from components.menus.endGameMenu import EndGameMenu
 
 from gameState import GameState
 from styles.colors import Colors
@@ -13,6 +14,8 @@ class GameScreen():
         self.screen = game.screen
         self.selectedPiece = ()
         self.gameState = GameState()
+        self.gameOverMenu = EndGameMenu(
+            game, "Game Over", (game.WIDTH, game.HEIGHT))
         self.layers = []
 
     def __drawSquars(self, selectedSq):
@@ -62,18 +65,21 @@ class GameScreen():
         boardSurface = self.__drawPieces(boardSurface)
         self.screen.blit(boardSurface, (0, 0))
         for layer, pos in self.layers:
-            self.screen.blit(layer, pos)
+            # layer.render(self.screen)
+            layer(self.screen)
 
     def eventHandler(self, event):
+        if self.gameState.checkmate:
+            self.layers.append((self.gameOverMenu.render, (100, 100)))
         if event.type == pygame.MOUSEBUTTONDOWN:
-            sqCoord = self.getPieceIndex(pygame.mouse.get_pos())
-            if sqCoord != None:
-                self.selectedPiece = self.gameState.selectPiece(sqCoord)
-                print(
-                    f"checkmate {self.gameState.checkmate}; stalemate {self.gameState.stalemate}")
+            if not self.gameState.checkmate and not self.gameState.stalemate:
+                sqCoord = self.getPieceIndex(pygame.mouse.get_pos())
+                if sqCoord != None:
+                    self.selectedPiece = self.gameState.selectPiece(sqCoord)
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_z:
-                self.gameState.undoMove()
+                if not self.gameState.checkmate and not self.gameState.stalemate:
+                    self.gameState.undoMove()
 
         # pawnSq = self.gameState.checkPawnPromotion()
         # if pawnSq:

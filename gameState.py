@@ -38,7 +38,7 @@ class GameState():
         self.castle_rights_log = [
             CastleRights(self.current_castling_rights.white_king_side, self.current_castling_rights.black_king_side,
                          self.current_castling_rights.white_queen_side, self.current_castling_rights.black_queen_side)]
-        self.checkmate = False
+        self.checkmate = False  # TODO get it back to False
         self.stalemate = False
         self.isEnPassant = ()
         self.getPieceMove = {

@@ -1,5 +1,4 @@
 from components.menus.Menu import Menu
-from components.text import Text
 from components.button import Button
 from styles.colors import Colors
 
