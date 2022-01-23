@@ -9,8 +9,8 @@ class GameState():
             ["bR", "bN", "bB", "bQ", "bk", "bB", "bN", "bR"],
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "bk", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "wp", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
             ["wR", "wN", "wB", "wQ", "wk", "wB", "wN", "wR"],
@@ -352,7 +352,9 @@ class GameState():
         # check if any of the those moves are attacking the king
         for p, Pmove in oppMoves.items():
             for move in Pmove:
-                if (move.endRow, move.endCol) == location:
+                if move.movedPiece[1] == 'p' and abs(move.endRow - move.startRow) > 1:
+                    continue
+                elif (move.endRow, move.endCol) == location:
                     return True
         # we have to return the turns so this function doesn't mess who can play now
         return False
