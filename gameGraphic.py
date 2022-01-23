@@ -73,18 +73,18 @@ class GameScreen():
 
     def render(self):
 
-        if not self.gameState.isgameover and not self.human_turn and not self.move_undone:
+        if not self.gameState.isgameover and not self.isHumainTurn() and not self.move_undone:
             aimove = ChessAi.getBestMove(
                 self.gameState, self.gameState.getAllPossibleValidMoves(self.gameState.isWhiteTurn))
             if aimove is None:
                 aimove = ChessAi.getRandomMove(
                     self.gameState.getAllPossibleValidMoves(self.gameState.isWhiteTurn))
             self.gameState.makeMove(aimove)
-            move_made = True
+            self.move_made = True
 
-        if move_made:
-            move_made = False
-            move_undone = False
+        if self.move_made:
+            self.move_made = False
+            self.move_undone = False
 
         boardSurface = self.__drawSquars(self.selectedPiece)
         boardSurface = self.__drawPieces(boardSurface)
